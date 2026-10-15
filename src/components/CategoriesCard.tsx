@@ -80,13 +80,16 @@ export const CategoriesCard: React.FC<CategoriesCardProps> = ({
         </div>
 
         {/* Poetic quote */}
-        <div className="pt-2.5 pb-2 text-center border-t border-neutral-200/60 dark:border-neutral-800/60">
-          <p
-            style={{ fontFamily: '"Noto Serif SC", "Songti SC", "SimSun", serif' }}
-            className="text-xs sm:text-[13px] font-serif italic text-neutral-500 dark:text-neutral-400 tracking-wider leading-relaxed"
-          >
-            “{data.step4Quote[0]}”
-          </p>
+        <div className="pt-2.5 pb-2 text-center border-t border-neutral-200/60 dark:border-neutral-800/60 space-y-1">
+          {data.step4Quote.map((line, idx) => (
+            <p
+              key={idx}
+              style={{ fontFamily: '"Noto Serif SC", "Songti SC", "SimSun", serif' }}
+              className="text-xs sm:text-[13px] font-serif italic text-neutral-500 dark:text-neutral-400 tracking-wider leading-relaxed"
+            >
+              {idx === 0 ? `“${line}` : idx === data.step4Quote.length - 1 ? `${line}”` : line}
+            </p>
+          ))}
         </div>
 
         {/* PPT Dotted Rule with Solid Marker (Matching Image 1) */}

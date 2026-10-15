@@ -156,7 +156,10 @@ export const ORIGINAL_PROFILE_DATA = {
     },
   ],
 
-  step4Quote: ['请享受不可回避的痛苦'],
+  step4Quote: [
+    '爱和恨，这两样是不能抵消的',
+    '我把刀架在你脖子上的同时，也觉得你的眼睛真漂亮',
+  ],
 
   notices: [
     {
