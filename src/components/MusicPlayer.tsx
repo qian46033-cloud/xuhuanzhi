@@ -2,51 +2,66 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Volume2, VolumeX, Music, Disc, Check, Copy } from 'lucide-react';
 
 export interface TrackInfo {
-  id: 'v1' | 'v2';
+  id: string;
   title: string;
   artist: string;
   src: string;
   label: string;
+  shortLabel: string;
   queryParam: string;
 }
 
 export const TRACKS: TrackInfo[] = [
   {
-    id: 'v1',
-    title: 'broken heart',
-    artist: 'FinalSay',
-    src: '/broken_heart.mp3',
-    label: '版本一',
-    queryParam: '1',
+    id: 'mercury',
+    title: '追逐水星',
+    artist: '辛辛君',
+    src: '/mercury.mp3',
+    label: '追逐水星',
+    shortLabel: '水星',
+    queryParam: 'mercury',
   },
   {
-    id: 'v2',
+    id: 'honest',
     title: 'Honest',
     artist: 'rei brown',
     src: '/honest.mp3',
-    label: '版本二',
+    label: 'Honest',
+    shortLabel: 'Honest',
     queryParam: '2',
+  },
+  {
+    id: 'broken',
+    title: 'broken heart',
+    artist: 'FinalSay',
+    src: '/broken_heart.mp3',
+    label: 'broken heart',
+    shortLabel: 'FinalSay',
+    queryParam: '1',
   },
 ];
 
 const detectInitialTrack = (): TrackInfo => {
-  if (typeof window === 'undefined') return TRACKS[1];
+  if (typeof window === 'undefined') return TRACKS[0];
   try {
     const params = new URLSearchParams(window.location.search);
     const hash = window.location.hash.toLowerCase();
     const v = params.get('v') || params.get('version') || params.get('music') || params.get('bgm');
     
-    if (v === '1' || v === 'broken_heart' || v === 'v1' || hash === '#v1') {
-      return TRACKS[0];
+    if (v === '1' || v === 'broken' || v === 'broken_heart' || hash === '#v1') {
+      return TRACKS[2];
     }
-    if (v === '2' || v === 'honest' || v === 'v2' || hash === '#v2' || hash === '#honest') {
+    if (v === '2' || v === 'honest' || hash === '#v2' || hash === '#honest') {
       return TRACKS[1];
+    }
+    if (v === 'mercury' || v === 'zhuzhuishuixing' || hash === '#mercury') {
+      return TRACKS[0];
     }
   } catch {
     // fallback
   }
-  // Default to V2 (rei brown - Honest) as specified in target link ?v=2
-  return TRACKS[1];
+  // Default to 辛辛君 - 《追逐水星》
+  return TRACKS[0];
 };
 
 export const MusicPlayer: React.FC = () => {
@@ -104,7 +119,6 @@ export const MusicPlayer: React.FC = () => {
           window.removeEventListener('touchstart', handleFirstInteraction);
           window.removeEventListener('keydown', handleFirstInteraction);
         };
-
         window.addEventListener('click', handleFirstInteraction, { once: true });
         window.addEventListener('touchstart', handleFirstInteraction, { once: true });
         window.addEventListener('keydown', handleFirstInteraction, { once: true });
@@ -143,34 +157,34 @@ export const MusicPlayer: React.FC = () => {
     if (target.id === currentTrack.id) return;
     setHasUserToggled(true);
     setCurrentTrack(target);
-
+    
     // Update browser URL query param without reload
     try {
       const url = new URL(window.location.href);
-      if (target.id === 'v2') {
-        url.searchParams.set('v', '2');
-      } else {
+      if (target.id === 'mercury') {
         url.searchParams.delete('v');
+      } else {
+        url.searchParams.set('v', target.queryParam);
       }
       window.history.replaceState({}, '', url.toString());
     } catch {
       // ignore
     }
 
-    triggerToast(`已切换为${target.label}: ${target.artist} - 《${target.title}》`);
+    triggerToast(`已切换为: ${target.artist} - 《${target.title}》`);
   };
 
   const copyCurrentVersionLink = () => {
     try {
       const url = new URL(window.location.href);
-      if (currentTrack.id === 'v2') {
-        url.searchParams.set('v', '2');
-      } else {
+      if (currentTrack.id === 'mercury') {
         url.searchParams.delete('v');
+      } else {
+        url.searchParams.set('v', currentTrack.queryParam);
       }
       navigator.clipboard.writeText(url.toString()).then(() => {
         setCopiedLink(true);
-        triggerToast(`已复制${currentTrack.label}专属链接！`);
+        triggerToast(`已复制《${currentTrack.title}》专属链接！`);
         setTimeout(() => setCopiedLink(false), 2000);
       });
     } catch {
@@ -180,7 +194,7 @@ export const MusicPlayer: React.FC = () => {
 
   return (
     <div className="flex items-center gap-1.5">
-      {/* Version Selector Pills: V1 / V2 */}
+      {/* Version Selector Pills: 水星 / Honest / FinalSay */}
       <div className="flex items-center bg-neutral-200/80 dark:bg-neutral-800/80 p-0.5 rounded-full border border-neutral-300/70 dark:border-neutral-700/70 text-[10px] font-mono">
         {TRACKS.map((t) => {
           const isActive = t.id === currentTrack.id;
@@ -193,9 +207,9 @@ export const MusicPlayer: React.FC = () => {
                   ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-950 shadow-xs'
                   : 'text-neutral-500 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white'
               }`}
-              title={`切换至${t.label}（${t.title}）`}
+              title={`切换至《${t.title}》- ${t.artist}`}
             >
-              {t.id.toUpperCase()}
+              {t.shortLabel}
             </button>
           );
         })}
@@ -227,20 +241,18 @@ export const MusicPlayer: React.FC = () => {
           </>
         ) : (
           <>
-            <VolumeX className="w-3.5 h-3.5 text-neutral-400 dark:text-neutral-500" />
-            <span className="hidden sm:inline text-[11px] font-sans text-neutral-500 dark:text-neutral-400">
-              音乐已关
-            </span>
+            <VolumeX className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline text-[11px] font-sans">音乐</span>
           </>
         )}
       </button>
 
-      {/* Copy link button */}
+      {/* Share / Copy current version link button */}
       <button
         onClick={copyCurrentVersionLink}
-        className="flex items-center justify-center p-1.5 rounded-full border border-neutral-300 dark:border-neutral-700 bg-white/80 dark:bg-neutral-900/80 hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-600 dark:text-neutral-400 transition-colors cursor-pointer shadow-xs"
-        title={`复制${currentTrack.label}专属链接`}
-        aria-label="复制专属链接"
+        className="p-1.5 rounded-full border border-neutral-300 dark:border-neutral-700 bg-white/80 dark:bg-neutral-900/80 text-neutral-500 hover:text-neutral-900 dark:hover:text-white transition-colors cursor-pointer"
+        title="复制当前版本链接"
+        aria-label="复制当前版本链接"
       >
         {copiedLink ? (
           <Check className="w-3.5 h-3.5 text-emerald-500" />
@@ -249,10 +261,10 @@ export const MusicPlayer: React.FC = () => {
         )}
       </button>
 
-      {/* Floating prompt toast */}
+      {/* Toast Notification */}
       {showToast && (
-        <div className="fixed bottom-6 right-6 z-50 bg-neutral-900/95 dark:bg-white/95 backdrop-blur-md text-white dark:text-neutral-950 px-3.5 py-2 rounded-lg text-xs shadow-xl flex items-center gap-2 animate-fade-in pointer-events-none border border-neutral-800 dark:border-neutral-200">
-          <Music className="w-3.5 h-3.5 text-amber-400 dark:text-amber-600 animate-spin" />
+        <div className="fixed bottom-6 right-6 z-50 bg-neutral-900/95 dark:bg-white/95 text-white dark:text-neutral-950 px-4 py-2.5 rounded-lg shadow-lg text-xs font-mono backdrop-blur-xs border border-neutral-800 dark:border-neutral-200 animate-fade-in flex items-center gap-2">
+          <Disc className="w-4 h-4 animate-spin text-amber-400 shrink-0" />
           <span>{toastMessage}</span>
         </div>
       )}
